@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Photo — Partage Privé & Public</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; transition: all 0.2s ease; }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .container { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+    
+    /* En-tête */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      padding: 15px 25px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 30px;
+    }
+    h1 { font-size: 22px; margin: 0; font-weight: 700; background: linear-gradient(90deg, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    /* Boutons & Modales */
+    .btn { background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn:hover { background: #2563eb; transform: translateY(-1px); }
+    .btn-success { background: #10b981; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; }
+    
+    .profile-menu { position: relative; }
+    .modal {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 50px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      width: 290px;
+      z-index: 100;
+    }
+    .modal.active { display: block; }
+    .modal input { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; }
+    .modal-toggle { font-size: 12px; color: #38bdf8; text-align: center; cursor: pointer; display: block; margin-top: 8px; }
+
+    /* Cartes */
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+    .card h2 { margin-top: 0; font-size: 18px; color: #e2e8f0; }
+
+    /* File upload personnalisé */
+    .file-input-wrapper { border: 2px dashed #475569; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; margin-bottom: 12px; }
+    .file-input-wrapper:hover { border-color: #38bdf8; }
+    
+    /* Grille Galerie */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .photo-card { background: #1e293b; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+    .photo-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.3); }
+    .photo-card img { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .photo-info { padding: 12px 15px; font-size: 13px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
+    .badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .badge-prive { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .badge-public { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+    /* Bouton Tigre Admin */
+    .tiger-btn { position: fixed; bottom: 25px; right: 25px; background: #f59e0b; border: none; border-radius: 50%; width: 56px; height: 56px; font-size: 26px; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.4); z-index: 1000; }
+    .tiger-btn:hover { transform: scale(1.1); }
+    .tiger-panel { display: none; position: fixed; bottom: 90px; right: 25px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); width: 220px; z-index: 1000; }
+    .tiger-panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <h1>?? Feed Photo</h1>
+      <div class="profile-menu">
+        <button class="btn" onclick="toggleModal('accountModal')" id="userBtn">?? Se connecter</button>
+        
+        <div id="accountModal" class="modal">
+          <div id="loginBox">
+            <h3 style="margin:0 0 12px 0; font-size:16px;">Connexion</h3>
+            <input type="email" id="login_email" placeholder="Adresse e-mail">
+            <input type="password" id="login_pass" placeholder="Mot de passe">
+            <button class="btn" style="width:100%; justify-content:center;" onclick="connexion()">Se connecter</button>
+            <span class="modal-toggle" onclick="basculerForm(true)">Créer un compte</span>
+          </div>
+
+          <div id="signupBox" style="display:none;">
+            <h3 style="margin:0 0 12px 0; font-size:16px;">Inscription</h3>
+            <input type="text" id="sign_pseudo" placeholder="Pseudo">
+            <input type="email" id="sign_email" placeholder="Adresse e-mail">
+            <input type="password" id="sign_pass" placeholder="Mot de passe">
+            <button class="btn btn-success" style="width:100%; justify-content:center;" onclick="inscription()">S'inscrire</button>
+            <span class="modal-toggle" onclick="basculerForm(false)">Déjà inscrit ? Connexion</span>
+          </div>
+
+          <div id="logoutBox" style="display:none;">
+            <p id="connectedText" style="margin:0 0 12px 0; font-size:14px; color:#cbd5e1;"></p>
+            <button class="btn btn-danger" style="width:100%; justify-content:center;" onclick="deconnexion()">Déconnexion</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone de publication -->
+    <div class="card" id="uploadCard" style="display:none;">
+      <h2>Publier une image</h2>
+      <form id="uploadForm">
+        <input type="file" id="fichier_photo" accept="image/*" required style="color:#94a3b8;">
+        <label style="font-size:14px; cursor:pointer; margin-top:8px;">
+          <input type="checkbox" id="est_prive"> ?? Rendre cette photo privée
+        </label>
+        <button type="submit" class="btn" style="margin-top:10px; width:fit-content;">Publier l'image</button>
+      </form>
+    </div>
+
+    <h2>Galerie Récente</h2>
+    <div id="galerie" class="grid">Veuillez vous connecter pour afficher le contenu.</div>
+  </div>
+
+  <!-- Bouton Administration -->
+  <button class="tiger-btn" onclick="toggleModal('tigerPanel')">??</button>
+  <div id="tigerPanel" class="tiger-panel">
+    <h4 style="margin:0 0 10px 0;">Accès Administrateur</h4>
+    <form id="adminForm">
+      <input type="password" id="code_admin" placeholder="Code secret" style="width:100%; padding:8px; margin-bottom:10px; background:#0f172a; border:1px solid #334155; color:white; border-radius:6px;" required>
+      <button type="submit" class="btn" style="width:100%; background:#f59e0b; justify-content:center;">Activer</button>
+    </form>
+    <p id="adminStatus" style="font-size:12px; margin-top:8px; font-weight:bold;"></p>
+  </div>
+
+  <script>
+    let currentUserId = localStorage.getItem('userId');
+    let userPseudo = localStorage.getItem('userPseudo');
+
+    function toggleModal(id) { document.getElementById(id).classList.toggle('active'); }
+    function basculerForm(versInscription) {
+      document.getElementById('loginBox').style.display = versInscription ? 'none' : 'block';
+      document.getElementById('signupBox').style.display = versInscription ? 'block' : 'none';
+    }
+
+    function mettreAJourUI() {
+      if (currentUserId) {
+        document.getElementById('userBtn').innerText = '?? ' + userPseudo;
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('signupBox').style.display = 'none';
+        document.getElementById('logoutBox').style.display = 'block';
+        document.getElementById('connectedText').innerText = 'Connecté : ' + userPseudo;
+        document.getElementById('uploadCard').style.display = 'block';
+        chargerPhotos();
+      } else {
+        document.getElementById('userBtn').innerText = '?? Se connecter';
+        document.getElementById('loginBox').style.display = 'block';
+        document.getElementById('signupBox').style.display = 'none';
+        document.getElementById('logoutBox').style.display = 'none';
+        document.getElementById('uploadCard').style.display = 'none';
+        document.getElementById('galerie').innerHTML = '<p style="color:#94a3b8;">Veuillez vous connecter pour voir la galerie.</p>';
+      }
+    }
+
+    async function inscription() {
+      const email = document.getElementById('sign_email').value;
+      const mot_de_passe = document.getElementById('sign_pass').value;
+      const pseudo = document.getElementById('sign_pseudo').value;
+
+      const res = await fetch('/api/inscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, mot_de_passe, pseudo })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        sauvegarderSession(data.id, data.pseudo);
+      } else {
+        alert(await res.text());
+      }
+    }
+
+    async function connexion() {
+      const email = document.getElementById('login_email').value;
+      const mot_de_passe = document.getElementById('login_pass').value;
+
+      const res = await fetch('/api/connexion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, mot_de_passe })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        sauvegarderSession(data.id, data.pseudo);
+      } else {
+        alert(await res.text());
+      }
+    }
+
+    function sauvegarderSession(id, pseudo) {
+      currentUserId = id;
+      userPseudo = pseudo;
+      localStorage.setItem('userId', id);
+      localStorage.setItem('userPseudo', pseudo);
+      toggleModal('accountModal');
+      mettreAJourUI();
+    }
+
+    function deconnexion() {
+      currentUserId = null;
+      userPseudo = null;
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userPseudo');
+      toggleModal('accountModal');
+      mettreAJourUI();
+    }
+
+    async function chargerPhotos() {
+      if (!currentUserId) return;
+      const res = await fetch('/api/photos', { headers: { 'user-id': currentUserId } });
+      if (res.ok) {
+        const photos = await res.json();
+        const galerie = document.getElementById('galerie');
+        galerie.innerHTML = photos.length === 0 ? '<p style="color:#94a3b8;">Aucune photo disponible.</p>' : photos.map(p => `
+          <div class="photo-card">
+            <img src="/uploads/${p.nom_fichier}" alt="Photo">
+            <div class="photo-info">
+              <span><b>${p.pseudo || 'Anonyme'}</b></span>
+              <span class="badge ${p.est_prive ? 'badge-prive' : 'badge-public'}">${p.est_prive ? 'Privée' : 'Publique'}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('fichier_photo');
+      const formData = new FormData();
+      formData.append('photo', fileInput.files[0]);
+      formData.append('est_prive', document.getElementById('est_prive').checked);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'user-id': currentUserId },
+        body: formData
+      });
+
+      if (res.ok) {
+        fileInput.value = '';
+        chargerPhotos();
+      } else {
+        alert(await res.text());
+      }
+    });
+
+    document.getElementById('adminForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUserId) return alert('Connectez-vous d\'abord.');
+      const res = await fetch('/api/devenir-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'user-id': currentUserId },
+        body: JSON.stringify({ code_secret: document.getElementById('code_admin').value })
+      });
+      const msg = await res.text();
+      document.getElementById('adminStatus').innerText = msg;
+      if (res.ok) chargerPhotos();
+    });
+
+    mettreAJourUI();
+  </script>
+</body>
+</html>
