@@ -1,22 +1,13 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./site_photos.db');
+const path = require('path');
 
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS utilisateurs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pseudo TEXT UNIQUE,
-    mot_de_passe TEXT,
-    role TEXT DEFAULT 'user',
-    est_banni INTEGER DEFAULT 0
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS photos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    auteur_id INTEGER,
-    nom_fichier TEXT,
-    est_prive INTEGER DEFAULT 0,
-    FOREIGN KEY(auteur_id) REFERENCES utilisateurs(id)
-  )`);
+const dbPath = path.join(__dirname, 'database.sqlite');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Erreur lors de la connexion à SQLite:', err.message);
+  } else {
+    console.log('Connexion réussie à la base SQLite.');
+  }
 });
 
 module.exports = db;
